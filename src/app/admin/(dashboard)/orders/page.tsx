@@ -1,46 +1,23 @@
 import Link from "next/link";
 import { Search, Eye, Filter } from "lucide-react";
 
-export default function AdminOrdersPage() {
-  // Mock data for orders
-  const mockOrders = [
-    {
-      id: "ORD-8492-X",
-      customer: "Aditi Sharma",
-      date: "Oct 5, 2026",
-      total: 3497,
-      items: 3,
-      status: "New",
-      payment: "WhatsApp/Manual"
-    },
-    {
-      id: "ORD-8491-Y",
-      customer: "Rahul Desai",
-      date: "Oct 4, 2026",
-      total: 1299,
-      items: 1,
-      status: "Processing",
-      payment: "Paid"
-    },
-    {
-      id: "ORD-8490-Z",
-      customer: "Megha Patel",
-      date: "Oct 3, 2026",
-      total: 5450,
-      items: 4,
-      status: "Shipped",
-      payment: "Paid"
-    },
-    {
-      id: "ORD-8489-W",
-      customer: "Kiran Singh",
-      date: "Oct 1, 2026",
-      total: 899,
-      items: 1,
-      status: "Delivered",
-      payment: "Paid"
-    }
-  ];
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+export default async function AdminOrdersPage() {
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  );
+
+  const { data: ordersData, error } = await supabase
+    .from("orders")
+    .select("*, order_items(id)")
+    .order("created_at", { ascending: false });
+
+  const orders = ordersData || [];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -109,38 +86,46 @@ export default function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-200">
-              {mockOrders.map((order) => (
-                <tr key={order.id} className="hover:bg-stone-50/50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-stone-900">
-                    {order.id}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-stone-500">
-                    {order.date}
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-stone-900">{order.customer}</p>
-                    <p className="text-xs text-stone-500">{order.items} {order.items === 1 ? 'item' : 'items'}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    {getStatusBadge(order.status)}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-stone-900 font-medium">
-                    ₹{order.total}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="inline-flex items-center gap-1 p-1.5 text-stone-500 hover:text-stone-900 bg-white border border-stone-200 rounded hover:bg-stone-50 transition-colors text-xs font-medium px-3">
-                      <Eye className="w-3.5 h-3.5" /> View
-                    </button>
+              {orders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-stone-500">
+                    No orders found. Wait for customers to place orders.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                orders.map((order: any) => (
+                  <tr key={order.id} className="hover:bg-stone-50/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-stone-900">
+                      {order.id.slice(0, 8)}...
+                    </td>
+                    <td className="px-6 py-4 text-sm text-stone-500">
+                      {new Date(order.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-stone-900">{order.customer_name}</p>
+                      <p className="text-xs text-stone-500">{order.order_items?.length || 0} items</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      {getStatusBadge(order.order_status)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-stone-900 font-medium">
+                      ₹{order.total_amount}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button className="inline-flex items-center gap-1 p-1.5 text-stone-500 hover:text-stone-900 bg-white border border-stone-200 rounded hover:bg-stone-50 transition-colors text-xs font-medium px-3">
+                        <Eye className="w-3.5 h-3.5" /> View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
         
         {/* Pagination */}
         <div className="px-6 py-4 border-t border-stone-200 flex items-center justify-between text-sm text-stone-500">
-          <p>Showing 1 to {mockOrders.length} of {mockOrders.length} entries</p>
+          <p>Showing {orders.length} entries</p>
           <div className="flex gap-1">
             <button className="px-3 py-1 border border-stone-200 rounded text-stone-400 cursor-not-allowed">Previous</button>
             <button className="px-3 py-1 border border-stone-200 rounded text-stone-900 hover:bg-stone-50">Next</button>

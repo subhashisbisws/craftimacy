@@ -5,12 +5,13 @@ import Link from "next/link";
 import { ArrowLeft, Upload, X, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+import { createProduct } from "@/app/actions/productActions";
+
 export default function NewProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   
-  // This is a UI prototype. In the real app, this form will submit to Supabase.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -18,41 +19,21 @@ export default function NewProductPage() {
 
     const formData = new FormData(e.currentTarget);
     
-    // Check if Supabase is actually configured
+    // Check if Supabase is configured
     const isSupabaseConfigured = 
       process.env.NEXT_PUBLIC_SUPABASE_URL && 
       process.env.NEXT_PUBLIC_SUPABASE_URL !== 'your_supabase_project_url' &&
       process.env.NEXT_PUBLIC_SUPABASE_URL !== '';
 
     if (isSupabaseConfigured) {
-      // In a real app, you would upload images to Storage first, get URLs, then insert product
-      // Here we just insert the textual data to demonstrate the connection
+      const response = await createProduct(formData);
       
-      const newProduct = {
-        name: formData.get("name") as string,
-        slug: (formData.get("name") as string).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
-        description: formData.get("description") as string,
-        price: parseFloat(formData.get("price") as string),
-        sale_price: formData.get("sale_price") ? parseFloat(formData.get("sale_price") as string) : null,
-        stock_quantity: parseInt(formData.get("stock_quantity") as string, 10),
-        sku: formData.get("sku") as string,
-        material: formData.get("material") as string,
-        care_instructions: formData.get("care_instructions") as string,
-        published: true, // Auto publish for this demo
-        new_arrival: formData.get("new_arrival") === "on",
-        featured: formData.get("featured") === "on",
-      };
-
-      const { error } = await supabase.from('products').insert([newProduct]);
-
-      if (error) {
-        console.error("Error adding product:", error);
-        setErrorMsg("Failed to add product to database: " + error.message);
+      if (response.error) {
+        setErrorMsg("Failed to add product: " + response.error);
         setIsSubmitting(false);
         return;
       }
     } else {
-      // Simulate API call for demo mode
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
@@ -112,12 +93,13 @@ export default function NewProductPage() {
             <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm space-y-4">
               <h2 className="text-lg font-medium text-stone-900 border-b border-stone-100 pb-2">Product Photos</h2>
               
-              <div className="border-2 border-dashed border-stone-300 rounded-lg p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-stone-50 transition-colors">
-                <div className="w-12 h-12 bg-stone-100 text-stone-500 rounded-full flex items-center justify-center mb-3">
+              <div className="relative border-2 border-dashed border-stone-300 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:bg-stone-50 transition-colors">
+                <input type="file" name="images" multiple accept="image/*" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                <div className="w-12 h-12 bg-stone-100 text-stone-500 rounded-full flex items-center justify-center mb-3 pointer-events-none">
                   <Upload className="w-5 h-5" />
                 </div>
-                <p className="font-medium text-stone-900 text-sm">Click to upload photos</p>
-                <p className="text-xs text-stone-500 mt-1">SVG, PNG, JPG or GIF (max. 5MB)</p>
+                <p className="font-medium text-stone-900 text-sm pointer-events-none">Click to upload photos</p>
+                <p className="text-xs text-stone-500 mt-1 pointer-events-none">SVG, PNG, JPG or GIF (max. 5MB)</p>
               </div>
             </div>
 

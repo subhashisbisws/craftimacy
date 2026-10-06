@@ -5,25 +5,35 @@ import Link from "next/link";
 import { useCart } from "@/lib/CartContext";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
+import { placeOrder } from "@/app/actions/orderActions";
+
 export default function CheckoutPage() {
   const { items, cartTotal, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call for placing order
-    setTimeout(() => {
+    setErrorMsg("");
+
+    const formData = new FormData(e.currentTarget);
+    const result = await placeOrder(formData, items, cartTotal);
+    
+    if (result.error) {
+      setErrorMsg(result.error);
+      setIsSubmitting(false);
+    } else {
       setIsSubmitting(false);
       setIsSuccess(true);
-      clearCart(); // Empty the cart on successful checkout
-    }, 1500);
+      clearCart();
+    }
   };
 
   if (!mounted) return null;
@@ -74,17 +84,22 @@ export default function CheckoutPage() {
           <h1 className="text-3xl font-serif text-stone-900 mb-8">Checkout</h1>
           
           <form id="checkout-form" onSubmit={handleSubmit} className="space-y-10">
+            {errorMsg && (
+              <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
+                {errorMsg}
+              </div>
+            )}
             {/* Contact Info */}
             <div>
               <h2 className="text-xl font-medium text-stone-900 mb-4 border-b border-stone-200 pb-2">Contact Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1">Email <span className="text-stone-400 font-normal">(Optional)</span></label>
-                  <input type="email" placeholder="you@example.com" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
+                  <input name="email" type="email" placeholder="you@example.com" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1">Phone Number *</label>
-                  <input required type="tel" placeholder="+91 98765 43210" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
+                  <input name="phone" required type="tel" placeholder="+91 98765 43210" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
                 </div>
               </div>
             </div>
@@ -95,20 +110,20 @@ export default function CheckoutPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1">Full Name *</label>
-                  <input required type="text" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
+                  <input name="fullName" required type="text" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-stone-700 mb-1">Street Address *</label>
-                  <input required type="text" placeholder="House number and street name" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
+                  <input name="address" required type="text" placeholder="House number and street name" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1">City *</label>
-                    <input required type="text" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
+                    <input name="city" required type="text" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1">State *</label>
-                    <select required className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white">
+                    <select name="state" required className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white">
                       <option value="">Select State</option>
                       <option>Maharashtra</option>
                       <option>Delhi</option>
@@ -122,7 +137,7 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1">PIN Code *</label>
-                    <input required type="text" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
+                    <input name="pinCode" required type="text" className="w-full px-4 py-2 rounded-none border border-stone-300 focus:outline-none focus:ring-1 focus:ring-stone-900 bg-white" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-stone-700 mb-1">Country</label>

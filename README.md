@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Craftimacy - Ecommerce & Admin System
 
-## Getting Started
+Craftimacy is a boutique Next.js e-commerce platform built for a small independent handmade/artisan products business. It allows for beautiful customer-facing catalogues along with a comprehensive, easy-to-use Admin Dashboard.
 
-First, run the development server:
+## Features Built
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Customer Facing Website**: Dynamic Home Page, Shop, and Product tracking built with modern server components.
+- **WhatsApp Ordering**: Users can push their entire cart to a formatted WhatsApp message instantly.
+- **Admin Dashboard**: Protected via Supabase Authentication. Allows tracking orders, managing products, and viewing metrics.
+- **Dynamic Inventory**: Stock levels decrement automatically when orders are placed, with Out-of-Stock warnings.
+- **Supabase Integration**: Next.js App Router compatible Supabase SSR, fetching data cleanly and handling image uploads securely via Server Actions.
+
+## Tech Stack
+
+- Next.js 16.3.8 (App Router)
+- React 19, Tailwind CSS v4, Framer Motion, Lucide React
+- Supabase (Postgres, Auth, Storage)
+
+## Local Setup
+
+### 1. Supabase Project
+
+1. Create a new project on [Supabase](https://supabase.com).
+2. Create a public Storage Bucket named `product-images`.
+3. In the SQL Editor, copy and execute the `supabase/migrations/00_initial_schema.sql` file.
+
+### 2. Environment Variables
+
+Duplicate `.env.example` to `.env.local` and fill in your Supabase details:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_DEFAULT_WHATSAPP_NUMBER="919876543210"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Create Admin Account
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Go to your Supabase project -> Authentication -> Add a User. Use this email and password to log in at `/admin/login`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Running Locally
 
-## Learn More
+Run the development server:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Managing Products & Categories
 
-## Deploy on Vercel
+Log in to `/admin` to access the portal. You can navigate to **Products -> Add New Product** to insert products. Images uploaded will securely be pushed to your Supabase Storage bucket and cross-referenced in your product listings!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deploy to Vercel by importing the Git repository. Ensure you add your `.env` variables in the Vercel project settings prior to building.
